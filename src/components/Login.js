@@ -25,7 +25,8 @@ function Login() {
 
       // Proceed further based on the response data
       if (responseData.success) {
-        const username = responseData.username;
+        
+        const username = responseData.userName;
         // If the login was successful, redirect to the dashboard
         console.log(email);
         navigate(`/dashboard`,{ state: { username: username, email: email } });

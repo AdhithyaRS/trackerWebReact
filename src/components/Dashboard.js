@@ -10,32 +10,32 @@ function Dashboard() {
   console.log(email);
   const navigate = useNavigate();
   const handleLogout = () => {
-    // You can implement a logout functionality here if needed.
-    // For this example, we are simply redirecting back to the login page.
     navigate("/");
   };
-  // Get the username from the URL query parameter using useParams
-  
-
-  // State to hold the list of products
   const [products, setProducts] = useState([]);
 
-  // Use useEffect to fetch the products when the component mounts or the username changes
   useEffect(() => {
-    // Define an async function to fetch the products
     const fetchProducts = async () => {
       console.log("In fetch "+email);
       try {
         const response = await axios.get(`http://localhost:8080/dashboard/${email}`);
         setProducts(response.data);
+        console.log(response.data);
+        console.log("ID of first product : "+response.data[0]._id);
       } catch (error) {
         console.error("Error occurred while fetching products:", error);
+        if (error.response && error.response.status === 401) {
+          // Unauthorized status
+          // You can handle unauthorized status here, such as redirecting to login page
+          alert("Unauthorized, please login.");
+          navigate("/");
+        }
       }
     };
 
-    // Call the fetchProducts function
+    
     fetchProducts();
-  }, [email]); // The effect will re-run whenever the uname changes
+  }, [email]);
 
   return (
     <div>
@@ -44,8 +44,8 @@ function Dashboard() {
         <h3>Products associated with {username}:</h3>
         <ul>
           {products.map((product) => (
-            <li key={product.id}>
-              <h4>Name: {product.name}</h4>
+            <li key={product._id}>
+              <h4>Name: {product.productName}</h4>
               <h4>Type: {product.type}</h4>
               <h4>Location: {product.location}</h4>
               <h4>Quantity: {product.quantity}</h4>
