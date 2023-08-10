@@ -15,7 +15,7 @@ function Signup() {
   const handleEmailVerification = async () => {
     try {
       // Send a POST request to the backend to initiate the email verification process
-      const response = await axios.post("http://localhost:8080/sendVerificationCode", {
+      const response = await axios.post("https://localhost:8443/sendVerificationCode", {
         email: email,
       });
       const responseData = response.data;
@@ -41,7 +41,7 @@ function Signup() {
   const handleRegistration = async () => {
     try {
       // Send a POST request to the backend to register the user
-      const response = await axios.post("http://localhost:8080/register", {
+      const response = await axios.post("https://localhost:8443/register", {
         email: email,
         userName: username,
         password: password,

@@ -16,7 +16,7 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`http://localhost:8080/login`, {
+      const response = await axios.post(`https://localhost:8443/login`, {
         email: email,
         password: password,
       });
@@ -51,7 +51,7 @@ function Login() {
 
   const handleEmailVerification = async () => {
     try {
-      const response = await axios.post("http://localhost:8080/passwordreset", {
+      const response = await axios.post("https://localhost:8443/passwordreset", {
         email: email,
         reset: true,
       });
@@ -76,7 +76,7 @@ function Login() {
 
   const handleVerificationCodeSubmit = async () => {
     try {
-      const response = await axios.post("http://localhost:8080/verifycode", {
+      const response = await axios.post("https://localhost:8443/verifycode", {
         email: email,
         password: newPassword,
         verificationCode: verificationCode,
@@ -195,7 +195,7 @@ export default Login;
 
 //   const handleLogin = async () => {
 //     try {
-//       const response = await axios.post(`http://localhost:8080/login`, {
+//       const response = await axios.post(`https://localhost:8443/login`, {
 //         email: email,
 //         password: password,
 //       });
@@ -231,7 +231,7 @@ export default Login;
 //   const handleEmailVerification = async () => {
 //     try {
 //       // Send a POST request to the backend to initiate the email verification process
-//       const response = await axios.post("http://localhost:8080/passwordreset", {
+//       const response = await axios.post("https://localhost:8443/passwordreset", {
 //         email: email,
 //         reset: true,
 //       });
@@ -258,7 +258,7 @@ export default Login;
 //   const handleVerificationCodeSubmit = async() => {
 //     try {
 //       // Send a POST request to the backend to initiate the email verification process
-//       const response = await axios.post("http://localhost:8080/verifycode", {
+//       const response = await axios.post("https://localhost:8443/verifycode", {
 //         email: email,
 //         password: password,
 //         verificationCode: verificationCode
