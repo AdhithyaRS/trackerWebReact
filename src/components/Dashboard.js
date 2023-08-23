@@ -18,7 +18,7 @@ function Dashboard() {
     const fetchProducts = async () => {
       console.log("In fetch "+email);
       try {
-        const response = await axios.get(`http://localhost:8080/dashboard/${email}`, {
+        const response = await axios.get(`http://localhost:8080/home/${email}`, {
           withCredentials: true,
         });
         setProducts(response.data);

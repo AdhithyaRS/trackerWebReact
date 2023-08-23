@@ -33,7 +33,7 @@ function Login() {
         // document.cookie = "jwt_token=" + token + "; HttpOnly; Path=/;";
         // If the login was successful, redirect to the dashboard
         console.log(email);
-        navigate(`/dashboard`,{ state: { username: username, email: email } });
+        navigate(`/home`,{ state: { username: username, email: email } });
       } else {
         const messageFromBackend = responseData.message;
         // If the login failed, show an appropriate alert message based on the backend message
