@@ -1,0 +1,108 @@
+/* Add this to your existing CSS file or create a new one */
+.home-icon {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.login-SignIn-container {
+  display: flex;
+  justify-content: center; /* Horizontally center the content */
+  align-items: center; /* Vertically center the content */
+  height: 100vh; /* Make the container fill the entire viewport */
+}
+
+.center-SignIn-container {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-SignIn-container {
+  margin-bottom: 10px;
+}
+
+.content-SignIn-container {
+  background-color: #f2f2f2;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+
+.SignIn-SignIn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.signup-text {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.user-type-toggle-SignIn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.user-type-toggle {
+  width: 40px; /* Adjust the width as needed */
+  height: 20px; /* Adjust the height as needed */
+  position: relative;
+}
+
+.user-type-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.user-type-toggle-label {
+  font-size: 14px; /* Adjust the font size as needed */
+  color: #555; /* Adjust the color as needed */
+  cursor: pointer;
+}
+
+.user-type-toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc; /* Toggle background color */
+  border-radius: 34px;
+  transition: 0.4s;
+}
+
+.user-type-toggle-slider:before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white; /* Slider handle color */
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+
+
+input[type="checkbox"]:checked + .user-type-toggle-slider:before {
+  transform: translateX(20px); /* Move the slider handle when checked */
+}
+.validation-alert {
+  font-size: 10px; /* Adjust the font size as needed */
+  color: red;     /* Optional: Change the color of the alert message */
+}
+
+
+/* Rest of your styles */
