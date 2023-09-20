@@ -1,20 +1,21 @@
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Login from "./components/Login";
-import Dashboard from "./components/Dashboard";
+import SignIn from "./components/SignIn";
+import Customer from "./components/Customer";
+import Retailer from "./components/Retailer";
 import Home from "./components/Home";
 import SignUp from "./components/SignUp";
-// import './components/Login.css';
-// import './components/Dashboard.css';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes> 
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Customer />} />
+      <Route path="/retailer" element={<Retailer />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/home" element={<Dashboard />} />
+
       </Routes>
     </BrowserRouter>
   );
