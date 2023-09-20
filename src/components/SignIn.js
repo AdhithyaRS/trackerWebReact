@@ -7,48 +7,56 @@ import "./SignIn.css";
 import { FaHome } from "react-icons/fa";
 
 function Login() {
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   const [userType, setUserType] = useState("CUSTOMER");
   const [password, setPassword] = useState("");
-  const [id, setId] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const navigate = useNavigate();
+  const [newPassword, setNewPasswrod] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
-  const [showVerificationSend, setShowVerificationSend] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [verificationCode, setVerificationCode] = useState("");
-  const [newPassword, setNewPasswrod] = useState("");
+  const [retypePassword, setRetypePassword] = useState("");
   const [message, setMessage] = useState("");
-  const [countryCode, setCountryCode] = useState("");
+  const [id, setId] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [reset, setReset] = useState(false);
+  const [disableResend, setDisableResend] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(60);
   
 
   const handleLogin = async () => {
     setMessage("");
+    let postData = {
+      password: password,
+      userTypeCustom: userType,
+    };
+  
     if (/\S+@\S+\.\S+/.test(id)) {
-      email = setEmail(id);
+      postData.email = id;
     } else if (/^\d{10}$/.test(id)) {
-      phoneNumber = setPhoneNumber(id);
+      postData.phoneNumber = countryCode + id;
     }
-    try {
-      const response = await axios.post(`http://localhost:8080/signIn`, {
-        email: email,
-        phoneNumber: (countryCode + phoneNumber),
-        password: password,
-        userTypeCustom: userType,
-      },{
+    try{
+      const response = await axios.post(`http://localhost:8080/signIn`, postData,{
         withCredentials: true,
       });
 
       const responseData = response.data;
       // Proceed further based on the response data
       if (responseData.success) {
-        
-        if (responseData.userType === "CUSTOMER") {
+        setMessage("");
+        setShowResetPassword(true);
+        setCountryCode("+91");
+        setId("");
+        setUserType("CUSTOMER");
+        setPassword("");
+        setNewPasswrod("");
+        setRetypePassword("");
+        setReset(false);
+        if (userType === "CUSTOMER") {
           navigate(`/`);
-        } else if (responseData.userType === "RETAILER") {
+        } else {
           navigate(`/retailer`);
         }
       } else {
@@ -60,6 +68,19 @@ function Login() {
     }
   };
 
+  const handlePasswordReset = () => {
+    setMessage("");
+    setVerificationSent(false);
+    setShowResetPassword(true);
+    setCountryCode("+91");
+    setId("");
+    setUserType("CUSTOMER");
+    setPassword("");
+    setNewPasswrod("");
+    setRetypePassword("");
+    setReset(false);
+  };
+
   useEffect(() => {
     console.log(userType);
     console.log(reset);
@@ -67,30 +88,26 @@ function Login() {
       handleEmailVerification();
   }
   }, [reset]);
-
-  const handlePasswordReset = () => {
-    setMessage("");
-    setShowResetPassword(true);
-  };
-
   const handleEmailVerification = async () => {
     setMessage("");
+    let postData = {
+      userTypeCustom: userType,
+      reset: reset,
+    };
+  
     if (/\S+@\S+\.\S+/.test(id)) {
-      email = setEmail(id);
+      postData.email = id;
     } else if (/^\d{10}$/.test(id)) {
-      phoneNumber = setPhoneNumber(id);
+      postData.phoneNumber = countryCode + id;
     }
-    try {
-      const response = await axios.post("http://localhost:8080/signIn/passwordreset", {
-        email: email,
-        phoneNumber: (countryCode + phoneNumber),
-        userTypeCustom: userType,
-        reset: reset,
+    try{
+      const response = await axios.post(`http://localhost:8080/signIn/passwordreset`, postData,{
+        withCredentials: true,
       });
       const responseData = response.data;
       if (responseData.success && responseData.message === "Reset") {
         // Prompt user with a confirmation dialog
-        const userWantsToReset = window.confirm("Password reset process already on-going!! Do you want to begin a new session?");
+        const userWantsToReset = window.confirm("Password reset process already on-going!! Do you want to cancel the old session?");
         
         if (userWantsToReset) {
             setReset(true);
@@ -105,7 +122,7 @@ function Login() {
     }
       if (responseData.success) {
         setVerificationSent(true);
-        setShowVerificationSend(false);
+        setReset(false);
         sendCodeToBackend();
       } else {
         setMessage(responseData.message);
@@ -117,82 +134,235 @@ function Login() {
   };
 
   const sendCodeToBackend = async () => {
+    setDisableResend(true);
     setMessage("");
-    try {
-      const response = await axios.post("http://localhost:8080/signIn/sendCode", {
-        email: email,
-        phoneNumber: (countryCode + phoneNumber),
-        userTypeCustom: userType,
-      }); 
+    let postData = {
+      userTypeCustom: userType,
+    };
+  
+    if (/\S+@\S+\.\S+/.test(id)) {
+      postData.email = id;
+    } else if (/^\d{10}$/.test(id)) {
+      postData.phoneNumber = countryCode + id;
+    }
+    try{
+      const response = await axios.post(`http://localhost:8080/signIn/sendCode`, postData,{
+        withCredentials: true,
+      });
       const responseData = response.data;
       if (responseData.success) {
+        setRetryCount(retryCount + 1);
         setMessage(responseData.message);
       } else {
         setMessage(responseData.message);
       }
     } catch (error) {
-      console.error("Error occurred while sending code to backend:", error);
-      alert("An error occurred while sending code to the backend. Please try again later.");
+      if (!error.response) {
+        console.error("Network error or CORS issue:", error.message);
+        setMessage("Network error. Please check your connection.");
+      } else {
+        console.error("Error occurred during registration:", error.response.data);
+  
+        switch (error.response.status) {
+          case 401: // Unauthorized
+            if (error.response.data === "Token has expired") {
+              setMessage("Your session has expired. Please start over again.");
+              // Optionally, redirect to login page or refresh the token
+            } else {
+              setMessage("Unauthorized access. Please sign up.");
+              // Optionally, redirect to login page
+            }
+            break;
+  
+          case 400: // Bad Request
+            setMessage("Invalid request. Please check your data and try again.");
+            break;
+  
+          case 500: // Internal Server Error
+            setMessage("An unexpected error occurred on the server. Please try again later.");
+            break;
+  
+          default:
+            setMessage("An error occurred. Please try again.");
+            break;
+        }
+      }
     }
   };
 
   const handleRetryVerification = () => {
-    setMessage("");
-    setVerificationSent(false);
-    setShowVerificationSend(true);
-    setRetryCount(retryCount + 1);
+    
+    if (retryCount < 4) {
+      sendCodeToBackend();
+  } else {
+      alert("Maximum tries reached!! Please check your email-id/Mobile number/Country code and try again");
+      setVerificationSent(false);
+      setNewPasswrod("");
+      setRetypePassword("");
+      setPassword("");
+      setVerificationCode("");
+      setMessage("");
+      setRetryCount(0);
+  }
   };
 
   const handleVerificationCodeSubmit = async () => {
     setMessage("");
-    try {
-      const response = await axios.post("http://localhost:8080/signIn/verifycode", {
-        email: email,
-        phoneNumber: (countryCode + phoneNumber),
-        verificationCode: verificationCode,
+    let postData = {
+      verificationCode: verificationCode,
+    };
+  
+    if (/\S+@\S+\.\S+/.test(id)) {
+      postData.email = id;
+    } else if (/^\d{10}$/.test(id)) {
+      postData.phoneNumber = countryCode + id;
+    }
+    try{
+      const response = await axios.post(`http://localhost:8080/signIn/verifycode`, postData,{
+        withCredentials: true,
       });
       const responseData = response.data;
       if (responseData.success) {
         setMessage(responseData.message);
-        try {
-          const response = await axios.post("http://localhost:8080/signIn/changePassword", {
-            email: email,
-            phoneNumber: (countryCode + phoneNumber),
-            password : password,
+        let postData = {
+          password : newPassword,
+          userTypeCustom: userType,
+        };
+      
+        if (/\S+@\S+\.\S+/.test(id)) {
+          postData.email = id;
+        } else if (/^\d{10}$/.test(id)) {
+          postData.phoneNumber = countryCode + id;
+        }
+        try{
+          const response = await axios.post(`http://localhost:8080/signIn/changePassword`, postData,{
+            withCredentials: true,
           });
           const responseData = response.data;
           if (responseData.success) {
             alert(responseData.message);
-            setVerificationSent(false);
             setShowResetPassword(false);
           } else {
             setMessage(responseData.message);
           }
         } catch (error) {
-          console.error("Error occurred during verification code submission:", error);
-          setMessage("An error occurred during verification code submission. Please try again later.");
+          if (!error.response) {
+            console.error("Network error or CORS issue:", error.message);
+            setMessage("Network error. Please check your connection.");
+          } else {
+            console.error("Error occurred during registration:", error.response.data);
+      
+            switch (error.response.status) {
+              case 401: // Unauthorized
+                if (error.response.data === "Token has expired") {
+                  setMessage("Your session has expired. Please start over again.");
+                  // Optionally, redirect to login page or refresh the token
+                } else {
+                  setMessage("Unauthorized access. Please sign up.");
+                  // Optionally, redirect to login page
+                }
+                break;
+      
+              case 400: // Bad Request
+                setMessage("Invalid request. Please check your data and try again.");
+                break;
+      
+              case 500: // Internal Server Error
+                setMessage("An unexpected error occurred on the server. Please try again later.");
+                break;
+      
+              default:
+                setMessage("An error occurred. Please try again.");
+                break;
+            }
+          }
         }
       } else {
         setMessage(responseData.message);
       }
     } catch (error) {
-      console.error("Error occurred during verification code submission:", error);
-      setMessage("An error occurred during verification code submission. Please try again later.");
+      if (!error.response) {
+        console.error("Network error or CORS issue:", error.message);
+        setMessage("Network error. Please check your connection.");
+      } else {
+        console.error("Error occurred during registration:", error.response.data);
+  
+        switch (error.response.status) {
+          case 401: // Unauthorized
+            if (error.response.data === "Token has expired") {
+              setMessage("Your session has expired. Please start over again.");
+              // Optionally, redirect to login page or refresh the token
+            } else {
+              setMessage("Unauthorized access. Please sign up.");
+              // Optionally, redirect to login page
+            }
+            break;
+  
+          case 400: // Bad Request
+            setMessage("Invalid request. Please check your data and try again.");
+            break;
+  
+          case 500: // Internal Server Error
+            setMessage("An unexpected error occurred on the server. Please try again later.");
+            break;
+  
+          default:
+            setMessage("An error occurred. Please try again.");
+            break;
+        }
+      }
     }
   };
   const handleCancelReset = () => {
-    if(showResetPassword){
+    if(verificationSent){
+      setVerificationSent(false);
+      setVerificationCode("");
+      setPassword("");
+      setNewPasswrod("");
+      setRetypePassword("");
+      setRetryCount(0);
+      setMessage("");
+    }else if(showResetPassword){
+      setId("");
+      setCountryCode("+91");
+      setUserType("CUSTOMER");
       setShowResetPassword(false);
-    }else{
-      setShowVerificationSend(false);
+      setMessage("");
     }
     
   };
   
   const handleToggleUserType = () => {
-    setUserType(userType === "CUSTOMER" ? "RETAILER" : "CUSTOMER");
+    if(!verificationSent){
+      setUserType(userType === "CUSTOMER" ? "RETAILER" : "CUSTOMER");
+      setCountryCode("+91");
+      setId("");
+      setMessage("");
+      setNewPasswrod("");
+      setPassword("");
+      setRetypePassword("");
+      setVerificationCode("");
+    }
     //console.log(userType);
   };
+
+  useEffect(() => {
+    let timer;
+    if (disableResend) {
+      timer = setInterval(() => {
+        setRemainingTime(prevTime => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            setDisableResend(false);
+            return 60;
+          } else {
+            return prevTime - 1;
+          }
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [disableResend]);
 
   return (
     <div className="login-SignIn-container">
@@ -229,8 +399,9 @@ function Login() {
             </label>
             
             <span className="user-type-toggle-label">RETAILER</span>
-            <p>{message}</p>
+            
           </div>
+          <p>{message}</p>
               <div className="login-input">
                 <h5>Enter mobile phone number or email*</h5>
                 {userType === 'RETAILER' && /^\d+$/.test(id) ? (
@@ -306,7 +477,7 @@ function Login() {
             <div className="password-input-container">
               <input
                 type={showPassword ? "text" : "password"}
-                className="input-field password-input"
+                className="input-field"
                 placeholder=""
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -318,7 +489,7 @@ function Login() {
             {password && password.length < 7 && <p className="validation-alert">Password must be at least 7 characters long.</p>}
             {password && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) && <p className="validation-alert">Password must contain at least 1 letter and 1 number.</p>}
               </div>
-              <button className="login-button" onClick={handleLogin} disabled={(!/\S+@\S+\.\S+/.test(id) && !/^\d{10}$/.test(id)) || password.length < 7 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || (countryCode && /^\d{10}$/.test(id))}>SIGN IN</button>
+              <button className="login-button" onClick={handleLogin} disabled={!((/\S+@\S+\.\S+/.test(id) || /^\d{10}$/.test(id)) && countryCode) || password.length < 7 ||  !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)}>SIGN IN</button>
               <p className="forgot-password">
                   Forgot your password?{" "}
                     <button className="reset-button" onClick={handlePasswordReset}>
@@ -341,14 +512,16 @@ function Login() {
                 type="checkbox"
                 onChange={handleToggleUserType}
                 checked={userType === "RETAILER"}
+                disabled={verificationSent}
               />
               <span className="user-type-toggle-slider"></span>
             </label>
             
             <span className="user-type-toggle-label">RETAILER</span>
-            <p>{message}</p>
-          </div>    
-          {showVerificationSend && (
+            
+          </div>   
+          <p>{message}</p> 
+          {!verificationSent ? (
             <>
               <div className="login-input">
                 <h5>Enter mobile phone number or email*</h5>
@@ -417,42 +590,72 @@ function Login() {
                   onChange={(e) => setId(e.target.value)}
                 />
                 {(/^\d+$/.test(id) && !/^\d{10}$/.test(id)) && <p className="validation-alert">Enter 10 digit mobile number.</p>}
-                {(!/\S+@\S+\.\S+/.test(id) && !/^\d+$/.test(id) && id) && <p className="validation-alert">Enter valid emai-id.</p>}
-                {(countryCode && /^\d{10}$/.test(id)) && <p className="validation-alert">Select country code</p>}
+                {( !/\S+@\S+\.\S+/.test(id) && !/^\d+$/.test(id) && id ) && <p className="validation-alert">Enter valid emai-id.</p>}
+                {(countryCode==="" && /^\d{10}$/.test(id)) && <p className="validation-alert">Select country code</p>}
               </div>
-              <button className="login-button" onClick={handleEmailVerification} disabled={(!/\S+@\S+\.\S+/.test(id) && !/^\d{10}$/.test(id)) || (countryCode && /^\d{10}$/.test(id))}>Send Verification Code</button>
+              <button className="login-button" onClick={handleEmailVerification} disabled={!((/\S+@\S+\.\S+/.test(id) || /^\d{10}$/.test(id)) && countryCode)}>Send Verification Code</button>
             </>
-          )}
+          ):(
+              <>
+              <div className="login-input">
+              <h5>Verification Code*</h5>
+              <input
+              type="text"
+              className="input-field"
+              placeholder="Enter verification code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+            />
+            {(verificationCode && !/^\d{6}$/.test(verificationCode)) && <p className="validation-alert">Enter 6 digit verification code</p>}
+            </div>
+                <div className="login-input">
+                <h5>New Password*</h5>
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input-field"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPasswrod(e.target.value)}
+              />
+              <button className="show-password-button" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {newPassword && newPassword.length < 7 && <p className="validation-alert">Password must be at least 7 characters long.</p>}
+            {newPassword && (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) && <p className="validation-alert">Password must contain at least 1 letter and 1 number.</p>}
+              </div>
+              <div className="login-input">
+                <h5>Re-type Password*</h5>
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input-field"
+                placeholder="Re-type password"
+                value={retypePassword}
+                onChange={(e) => setRetypePassword(e.target.value)}
+              />
+              <button className="show-password-button" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {newPassword!==retypePassword && <p className="validation-alert">Password must match.</p>}
+              </div>
+              {(/^\d{6}$/.test(verificationCode) && newPassword.length >= 7 && /[A-Za-z]/.test(newPassword) && /[0-9]/.test(newPassword) && newPassword===retypePassword) ? (
+          <button onClick={handleVerificationCodeSubmit}>Submit</button>
+        ):(
+          <button disabled>Submit</button>
+        )}
+                {retryCount < 5 && (
+                  <button onClick={handleRetryVerification} disabled={disableResend}>
+                  {disableResend ? `Resend Verification Code (${remainingTime}s)` : 'Resend Verification Code'}
+                </button>
+                
+                  )}
+              </>
+            )}
         </>
       )}
-      {verificationSent && (
-  <>
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <h5 style={{ marginRight: "10px" }}>Verification Code*</h5>
-      <input
-        type="text"
-        placeholder="Enter verification code"
-        value={verificationCode}
-        onChange={(e) => setVerificationCode(e.target.value)}
-      />
-    </div>
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <h5 style={{ marginRight: "10px" }}>New Password*</h5>
-      <input
-        type="password"
-        placeholder="Enter new password"
-        value={newPassword}
-        onChange={(e) => setNewPasswrod(e.target.value)}
-      />
-    </div>
-    <button onClick={handleVerificationCodeSubmit}>Submit</button>
-    {retryCount < 3 && (
-      <button onClick={handleRetryVerification}>
-        Resend Verification Code
-      </button>
-    )}
-  </>
-)}
 </div>
     </div>
     </div>

@@ -10,7 +10,7 @@ function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [verificationOngoing, setVerificationOngoing] = useState(false);
-  const [countryCode, setCountryCode] = useState("91");
+  const [countryCode, setCountryCode] = useState("+91");
   const [userType, setUserType] = useState("CUSTOMER");
   const [reset, setReset] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,6 +21,7 @@ function Signup() {
   const [companyBrand, setcompanyBrand] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [retypePassword, setRetypePassword] = useState("");
   const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [companyPincode, setCompanyPincode] = useState("");
@@ -29,6 +30,8 @@ function Signup() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const [retryCount, setRetryCount] = useState(-1);
+  const [disableResend, setDisableResend] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(60);
 
 
   const handleEmailVerification = async () => {
@@ -77,8 +80,27 @@ function Signup() {
     }
   };
 
+  useEffect(() => {
+    let timer;
+    if (disableResend) {
+      timer = setInterval(() => {
+        setRemainingTime(prevTime => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            setDisableResend(false);
+            return 60;
+          } else {
+            return prevTime - 1;
+          }
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [disableResend]);
+
   const handleRetryVerification = async () => {
     setMessage("");
+    setDisableResend(true);
     if (retryCount < 3) {
         try {
             setVerificationOngoing(true);
@@ -313,9 +335,12 @@ function Signup() {
             <h5>Mobile Number*</h5>
             <div className="phone-input-container">
                   {userType === 'RETAILER' ? (
-                  <select value="+91" disabled>
-                    <option value="+91">(+91) India</option>
-                  </select>
+                  <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                >
+                <option value="+91">+91 (India)</option>
+              </select>
                 ) : (
                   <select
                     value={countryCode}
@@ -397,10 +422,11 @@ function Signup() {
             <input
               type="text"
               className="input-field"
-              placeholder="Please enter e-mail verification code"
+              placeholder="Enter e-mail verification code"
               value={emailVerificationCode}
               onChange={(e) => setEmailVerificationCode(e.target.value)}
             />
+            {(emailVerificationCode && !/^\d{6}$/.test(emailVerificationCode)) && <p className="validation-alert">Enter 6 digit verification code</p>}
             </div>
             
             <div className="grid-item">
@@ -413,6 +439,7 @@ function Signup() {
                   value={phoneNumberVerificationCode}
                   onChange={(e) => setPhoneNumberVerificationCode(e.target.value)}
                 />
+                {(phoneNumberVerificationCode && !/^\d{6}$/.test(phoneNumberVerificationCode)) && <p className="validation-alert">Enter 6 digit verification code</p>}
                 </div>
                 {userType === "RETAILER" && verificationSent && !registrationCompleted && (
             <>
@@ -487,15 +514,33 @@ function Signup() {
             {password.length < 7 && <p className="validation-alert">Password must be at least 7 characters long.</p>}
             {password && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) && <p className="validation-alert">Password must contain at least 1 letter and 1 number.</p>}
           </div>
+          <div className="grid-item">
+            <h5>Re-type password*</h5>
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input-field password-input"
+                placeholder="Enter your password"
+                value={retypePassword}
+                onChange={(e) => setRetypePassword(e.target.value)}
+              />
+              <button className="show-password-button" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            {password!==retypePassword && <p className="validation-alert">Password must match.</p>}
+          </div>
 
           </div>
-          {(userType==="CUSTOMER" && password && username && emailVerificationCode && phoneNumberVerificationCode && password.length >= 7 && /[A-Za-z]/.test(password) && /[0-9]/.test(password)) || (userType==="RETAILER" && password && username && companyBrand && phoneNumberVerificationCode && emailVerificationCode && companyAddress && companyCity && companyPincode && companyState && password.length >= 7 && /[A-Za-z]/.test(password) && /[0-9]/.test(password)) ? (
+          {(userType==="CUSTOMER" && password && username && /^\d{6}$/.test(emailVerificationCode) && /^\d{6}$/.test(phoneNumberVerificationCode) && password.length >= 7 && /[A-Za-z]/.test(password) && /[0-9]/.test(password) && password===retypePassword) || (userType==="RETAILER" && password && username && companyBrand && /^\d{6}$/.test(emailVerificationCode) && /^\d{6}$/.test(phoneNumberVerificationCode) && companyAddress && companyCity && companyPincode && companyState && password.length >= 7 && /[A-Za-z]/.test(password) && /[0-9]/.test(password)  && password===retypePassword) ? (
           <button onClick={handleRegistration}>Register</button>
         ):(
           <button disabled>Register</button>
         )}
           {retryCount < 4 && (
-            <button onClick={handleRetryVerification}>Resend Verification Code</button>
+            <button onClick={handleRetryVerification} disabled={disableResend}>
+            {disableResend ? `Resend Verification Code (${remainingTime}s)` : 'Resend Verification Code'}
+          </button>
           )}
         </>
       )}

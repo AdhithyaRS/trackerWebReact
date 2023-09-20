@@ -133,7 +133,27 @@
     flex-grow: 1;
   }
   
-  
+  /* Media Query for Tablet */
+@media only screen and (max-width: 768px) {
+  .content-container {
+    width: 80%;
+  }
+  .user-details-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Media Query for Mobile */
+@media only screen and (max-width: 480px) {
+  .content-container {
+    width: 70%;
+  }
+  .user-details-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
   
   /* Rest of your styles */
   
