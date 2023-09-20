@@ -130,10 +130,8 @@ function Signup() {
                     case 401: // Unauthorized
                         if (error.response.data === "Token has expired") {
                             setMessage("Your session has expired. Please start over again.");
-                            // Optionally, redirect to login page or refresh the token
                         } else {
                             setMessage("Unauthorized access. Please sign up.");
-                            // Optionally, redirect to login page
                         }
                         break;
 
@@ -218,10 +216,8 @@ function Signup() {
           case 401: // Unauthorized
             if (error.response.data === "Token has expired") {
               setMessage("Your session has expired. Please start over again.");
-              // Optionally, redirect to login page or refresh the token
             } else {
               setMessage("Unauthorized access. Please sign up.");
-              // Optionally, redirect to login page
             }
             break;
   
