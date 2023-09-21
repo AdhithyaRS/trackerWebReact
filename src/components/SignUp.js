@@ -241,7 +241,6 @@ function Signup() {
     navigate("/signin");
   };
   useEffect(() => {
-    console.log(userType);
     console.log(reset);
     if (reset) {
       handleEmailVerification();

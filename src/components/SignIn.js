@@ -80,13 +80,7 @@ function Login() {
     setReset(false);
   };
 
-  useEffect(() => {
-    console.log(userType);
-    console.log(reset);
-    if (reset) {
-      handleEmailVerification();
-  }
-  }, [reset]);
+
   const handleEmailVerification = async () => {
     setMessage("");
     let postData = {
@@ -131,6 +125,13 @@ function Login() {
       alert("An error occurred during email verification. Please try again later.");
     }
   };
+
+  useEffect(() => {
+    console.log(reset);
+    if (reset) {
+      handleEmailVerification();
+  }
+  }, [reset]);
 
   const sendCodeToBackend = async () => {
     setDisableResend(true);
