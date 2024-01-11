@@ -54,8 +54,10 @@ function Login() {
         setRetypePassword("");
         setReset(false);
         if (userType === "CUSTOMER") {
+          localStorage.removeItem("cachedCustomerData");
           navigate(`/`);
         } else {
+          localStorage.removeItem("cachedRetailerData");
           navigate(`/retailer`);
         }
       } else {
@@ -122,7 +124,7 @@ function Login() {
       }
     } catch (error) {
       console.error("Error occurred during email verification:", error);
-      alert("An error occurred during email verification. Please try again later.");
+      alert("An error occurred during sending Verification codes. Please try again later.");
     }
   };
 
